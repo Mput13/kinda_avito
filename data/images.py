@@ -7,12 +7,11 @@ from data.db_session import SqlAlchemyBase
 
 
 class Image(SqlAlchemyBase, SerializerMixin):
-    __tablename__ = 'lots'
+    __tablename__ = 'images'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     path = sqlalchemy.Column(sqlalchemy.String)
-    file_name = sqlalchemy.Column(sqlalchemy.String)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
     lot_id = sqlalchemy.Column(sqlalchemy.Integer,

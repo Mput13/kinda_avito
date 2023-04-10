@@ -2,7 +2,7 @@ from flask import Flask
 from flask_restful import Api
 
 from data import db_session
-from routes import lots_api
+from routes import lots_api, users_api
 
 app = Flask(__name__)
 api = Api(app)
@@ -17,11 +17,12 @@ app.config['SECRET_KEY'] = 'asdfasdfasdfsf'
 def main():
     db_session.global_init("db/blogs.db")
     app.register_blueprint(lots_api.blueprint)
+    app.register_blueprint(users_api.blueprint)
     app.run()
 
 
 def main():
-    db_session.global_init("db/blogs.db")
+    db_session.global_init("db/data.db")
     app.run(host='0.0.0.0', port=8005, debug=True)
 
 
