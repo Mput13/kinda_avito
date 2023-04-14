@@ -5,18 +5,18 @@ from data import db_session
 from data.users import User
 
 
-def abort_if_user_not_found(lot_id):
+def abort_if_user_not_found(id):
     session = db_session.create_session()
-    user = session.query(User).get(lot_id)
+    user = session.query(User).get(id)
     if not user:
-        abort(404, message=f"News {lot_id} not found")
+        abort(404, message=f"News {id} not found")
 
 
 class UserResource(Resource):
-    def get(self, lot_id):
-        abort_if_user_not_found(lot_id)
+    def get(self, id):
+        abort_if_user_not_found(id)
         session = db_session.create_session()
-        lot = session.query(User).get(lot_id)
+        lot = session.query(User).get(id)
         return jsonify({'user': lot.to_dict(
             only=('id', 'telegram_id', 'created_date'))})
 
@@ -31,7 +31,7 @@ class UserResource(Resource):
 
 parser = reqparse.RequestParser()
 parser.add_argument('telegram_id', required=True)
-parser.add_argument('id', type=int)
+parser.add_argument('id', required=True, type=int)
 
 
 class UserListResource(Resource):
@@ -46,6 +46,7 @@ class UserListResource(Resource):
         session = db_session.create_session()
         user = User()
         user.telegram_id = args['telegram_id']
+        user.user_id = args['user_id']
         session.add(user)
         session.commit()
         return jsonify({'success': 'OK'})

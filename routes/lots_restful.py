@@ -9,7 +9,7 @@ def abort_if_lot_not_found(lot_id):
     session = db_session.create_session()
     lot = session.query(Lot).get(lot_id)
     if not lot:
-        abort(404, message=f"News {lot_id} not found")
+        abort(404, message=f"Lot {lot_id} not found")
 
 
 class LotResource(Resource):
@@ -20,17 +20,17 @@ class LotResource(Resource):
         return jsonify({'lot': lot.to_dict(
             only=('id', 'title', 'price', 'description', 'category', 'created_date', 'creator'))})
 
-    def delete(self, lot_id):
-        abort_if_lot_not_found(lot_id)
+    def delete(self, id):
+        abort_if_lot_not_found(id)
         session = db_session.create_session()
-        lot = session.query(Lot).get(lot_id)
+        lot = session.query(Lot).get(id)
         session.delete(lot)
         session.commit()
         return jsonify({'success': 'OK'})
 
 
 parser = reqparse.RequestParser()
-parser.add_argument('id', type=int)
+# parser.add_argument('id', type=int)
 parser.add_argument('title', required=True)
 parser.add_argument('price', required=True, type=float)
 parser.add_argument('description')
@@ -42,7 +42,7 @@ class LotListResource(Resource):
     def get(self):
         session = db_session.create_session()
         news = session.query(Lot).all()
-        return jsonify({'news': [item.to_dict(
+        return jsonify({'lots': [item.to_dict(
             only=('id', 'title', 'price', 'description', 'category', 'created_date', 'creator')) for item in news]})
 
     def post(self):
@@ -56,5 +56,4 @@ class LotListResource(Resource):
         lot.creator = args['creator']
         session.add(lot)
         session.commit()
-        print(session.query(Lot).all())
         return jsonify({'success': 'OK'})
