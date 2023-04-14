@@ -1,5 +1,6 @@
 import datetime
 import sqlalchemy
+from sqlalchemy.util.preloaded import orm
 from sqlalchemy_serializer import SerializerMixin
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,11 +13,12 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
-    telegramm_id = sqlalchemy.Column(sqlalchemy.String,
-                                     index=True, unique=True, nullable=True)
+    telegram_id = sqlalchemy.Column(sqlalchemy.String,
+                                    index=True, unique=True, nullable=True)
     # hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
+    lot = orm.relationship("Lot", back_populates='user')
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)

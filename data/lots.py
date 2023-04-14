@@ -12,10 +12,12 @@ class Lot(SqlAlchemyBase, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     title = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    price = sqlalchemy.Column(sqlalchemy.Integer)
+    price = sqlalchemy.Column(sqlalchemy.Float)
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    category = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
     creator = sqlalchemy.Column(sqlalchemy.String,
-                                sqlalchemy.ForeignKey("users.telegramm_id"))
+                                sqlalchemy.ForeignKey("users.telegram_id"))
     user = orm.relationship('User')
+    image = orm.relationship("Image", back_populates='lot')
