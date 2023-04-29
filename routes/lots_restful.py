@@ -5,7 +5,6 @@ from sqlalchemy import select
 from data import db_session
 from data.categories import Category
 from data.lots import Lot
-from data.users import User
 
 
 def abort_if_lot_not_found(id):
@@ -20,16 +19,22 @@ class LotResource(Resource):
         abort_if_lot_not_found(id)
         session = db_session.create_session()
         lot = session.scalar(select(Lot).where(Lot.id == id))
+        session.close()
         return jsonify({'lot': lot.to_dict(
             only=('id', 'title', 'price', 'description', 'category', 'created_date', 'creator'))})
 
     def delete(self, id):
+        args = request.args.to_dict()
         abort_if_lot_not_found(id)
         session = db_session.create_session()
         lot = session.query(Lot).get(id)
-        session.delete(lot)
-        session.commit()
-        return jsonify({'success': 'OK'})
+        if lot.creator == args['user']:
+            session.delete(lot)
+            session.commit()
+            session.close()
+            return jsonify({'success': 'OK'})
+        else:
+            return jsonify({'failed': 'Вы не создатель объявления'})
 
 
 parser = reqparse.RequestParser()
@@ -45,14 +50,17 @@ class LotListResource(Resource):
     def get(self):
         args = request.args.to_dict()
         session = db_session.create_session()
-        if len(args.keys()) == 0:
-            news = session.query(Lot).all()
+        if args.get('category'):
+            lots = session.query(Lot).where(Lot.category == args.get('category') and Lot.creator == args.get('watcher'))
+        elif len(args.keys()) == 0:
+            lots = session.query(Lot).all()
         elif bool(args.get('user_lots')):
-            news = session.query(Lot).where(Lot.creator == args.get('watcher'))
+            lots = session.query(Lot).where(Lot.creator == args.get('watcher'))
         else:
-            news = session.query(Lot).where(Lot.creator != args.get('watcher'))
+            lots = session.query(Lot).where(Lot.creator != args.get('watcher'))
+        session.close()
         return jsonify({'lots': [item.to_dict(
-            only=('id', 'title', 'price', 'description', 'category', 'created_date', 'creator')) for item in news]})
+            only=('id', 'title', 'price', 'description', 'category', 'created_date', 'creator')) for item in lots]})
 
     def post(self):
         args = parser.parse_args()
@@ -72,6 +80,5 @@ class LotListResource(Resource):
         if not ctgr:
             session.add(category)
         session.commit()
-        inf = session.scalars(select(Lot).where(Lot.title == args['title']))
         return jsonify({'success': 'OK',
-                        'id': list(inf)[-1].id})
+                        'id': lot.id})

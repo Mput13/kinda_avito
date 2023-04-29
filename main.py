@@ -1,13 +1,13 @@
-import pprint
+import uuid
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, send_file
 from flask_restful import Api
-from sqlalchemy import select, and_
 
 import image_restful
 from data import db_session
-from data.lots import Lot
-from routes import lots_api, users_api, lots_restful, users_restful, categories_restful
+from data.files import File
+from data.images import Image
+from routes import lots_restful, users_restful, categories_restful
 
 app = Flask(__name__)
 api = Api(app)
@@ -32,6 +32,47 @@ def main():
     db_session.global_init("db/blogs.db")
     app.run(host='0.0.0.0', port=8005, debug=True)
 
+
+# @app.route('/upload-image', methods=['POST'])
+# def upload_image():
+#     data = request.json
+#     saving_name = f'./files'
+#     h = httplib2.Http(saving_name)
+#     response, content = h.request(data['file_url'])
+#     out = open(saving_name, 'wb')
+#     out.write(content)
+#     out.close()
+#     session = db_session.create_session()
+#     new_file = File()
+#     new_file.path = f'{saving_name}/{}'
+#     session.add(new_file)
+#     session.commit()
+#
+#     return {'id': new_file.id}
+
+@app.route('/upload-image', methods=['POST'])
+def upload_image():
+    file = request.files['file']
+    saving_name = f'./images/{uuid.uuid4()}.upload'
+    file.save(saving_name)
+    session = db_session.create_session()
+    new_file = File()
+    new_file.path = saving_name
+    session.add(new_file)
+    session.commit()
+
+    return {'id': new_file.id}
+
+
+@app.route('/get-image', methods=['GET'])
+def get_image():
+    args = request.args.to_dict()
+    session = db_session.create_session()
+    image = session.query(Image).where(Image.id == int(args['image_id'])).all()
+    if int(args['image_id']) == -1:
+        return send_file('./images/amonga.png')
+    else:
+        return send_file(image[0].path)
 
 # @app.route('/api/v2/lots/search', methods=['GET'])
 # def search():

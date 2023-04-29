@@ -8,6 +8,7 @@ from data.categories import Category
 def abort_if_news_not_found(id):
     session = db_session.create_session()
     categoies = session.query(Category).get(id)
+    session.close()
     if not categoies:
         abort(404, message=f"Category {id} not found")
 
@@ -17,6 +18,7 @@ class CategoryResource(Resource):
         abort_if_news_not_found(id)
         session = db_session.create_session()
         news = session.query(Category).get(id)
+        session.close()
         return jsonify({'news': news.to_dict(
             only=('title', 'content', 'user_id', 'is_private'))})
 
@@ -26,6 +28,7 @@ class CategoryResource(Resource):
         news = session.query(Category).get(id)
         session.delete(news)
         session.commit()
+        session.close()
         return jsonify({'success': 'OK'})
 
 
@@ -37,8 +40,8 @@ class CategoryListResource(Resource):
     def get(self):
         session = db_session.create_session()
         news = session.query(Category).all()
-        return jsonify({'categories': [item.to_dict(
-            only=('id', 'category')) for item in news]})
+        session.close()
+        return jsonify({'categories': [item.category for item in news]})
 
     def post(self):
         args = parser.parse_args()
@@ -47,4 +50,5 @@ class CategoryListResource(Resource):
         category.category = args['category']
         session.add(category)
         session.commit()
+        session.close()
         return jsonify({'success': 'OK'})

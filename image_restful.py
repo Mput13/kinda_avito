@@ -1,13 +1,13 @@
 import io
-from base64 import b64decode as dec64
 from base64 import encodebytes
+from typing import List
 
-from PIL import Image
 from flask import abort, jsonify, request
 from flask_restful import reqparse, Resource
 
 from data import db_session
 from data.categories import Category
+from data.files import File
 from data.images import Image
 
 
@@ -30,11 +30,13 @@ class ImageResource(Resource):
     def get(self, id):
         abort_if_news_not_found(id)
         session = db_session.create_session()
-        images = session.query(Image).where(Image.lot_id == id)
-        encoded_imges = []
-        for image in images:
-            encoded_imges.append(get_bite_image(image.path))
-        return jsonify({'photos': encoded_imges})
+        images = session.query(Image).where(Image.lot_id == id).all()
+        ids = [image.id for image in images]
+        session.close()
+        if len(images) != 0:
+            return jsonify({'image_ids': ids})
+        else:
+            return jsonify({'image_ids': [-1]})
 
     def delete(self, id):
         abort_if_news_not_found(id)
@@ -42,11 +44,13 @@ class ImageResource(Resource):
         image = session.query(Category).get(id)
         session.delete(image)
         session.commit()
+        session.close()
         return jsonify({'success': 'OK'})
 
 
 parser = reqparse.RequestParser()
 parser.add_argument('path', required=True)
+# parser.add_argument('filename', required=True)
 parser.add_argument('lot_id', type=int, required=True)
 
 
@@ -58,17 +62,29 @@ class ImageListResource(Resource):
     #         only=('id', 'category')) for item in news]})
 
     def post(self):
-        args = parser.parse_args()
+        data = request.json
+        session = db_session.create_session()
+        files: List[File] = session.query(File).filter(File.id.in_(data['file_ids'])).all()
+        for file in files:
+            image = Image()
+            image.path = file.path
+            image.lot_id = data['lot_id']
+            session.add(image)
+        session.commit()
+        session.close()
+
+        session.commit()
         # data = request.data.decode('utf-8')
         # print(data)
-        files = request.files['files']
-        session = db_session.create_session()
-        image = Image()
-        image.path = args['path']
-        # for i, file in enumerate(files):
+        # args = request.json['files']
+        # session = db_session.create_session()
+        # image = Image()
+        # image.path = args['path']
+        # for i, file in enumerate(args['files']):
         #     Image.open(io.BytesIO(dec64(file))).save(args['path'])
-        Image.open(io.BytesIO(dec64(file))).save(args['path'])
-        image.lot_id = args['lot_id']
-        session.add(image)
-        session.commit()
+        # Image.open(io.BytesIO(dec64(args['files']))).save(args['path'])
+        # image.lot_id = args['lot_id']
+        # session.add(image)
+        # session.commit()
+        # session.close()
         return jsonify({'success': 'OK'})
