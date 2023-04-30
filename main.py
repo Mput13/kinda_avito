@@ -33,23 +33,6 @@ def main():
     app.run(host='0.0.0.0', port=8005, debug=True)
 
 
-# @app.route('/upload-image', methods=['POST'])
-# def upload_image():
-#     data = request.json
-#     saving_name = f'./files'
-#     h = httplib2.Http(saving_name)
-#     response, content = h.request(data['file_url'])
-#     out = open(saving_name, 'wb')
-#     out.write(content)
-#     out.close()
-#     session = db_session.create_session()
-#     new_file = File()
-#     new_file.path = f'{saving_name}/{}'
-#     session.add(new_file)
-#     session.commit()
-#
-#     return {'id': new_file.id}
-
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
     file = request.files['file']
@@ -73,17 +56,6 @@ def get_image():
         return send_file('./images/amonga.png')
     else:
         return send_file(image[0].path)
-
-# @app.route('/api/v2/lots/search', methods=['GET'])
-# def search():
-#     # В разработке
-#     args = request.args.to_dict()
-#     if args.get('')
-#     session = db_session.create_session()
-#     stmt = select(Lot().where(Lot.creator == args.get('creator')))
-#     output = [item.to_dict(only=('id', 'title', 'price', 'description', 'category', 'created_date', 'creator'))
-#               for item in session.scalars(stmt)]
-#     return jsonify(output)
 
 
 if __name__ == "__main__":
